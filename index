@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google 相簿位置搜尋</title>
+    <!-- 使用 Tailwind CSS 進行快速樣式設定 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #f3f4f6;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-center">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fa-solid fa-map-location-dot text-3xl text-blue-600"></i>
+            </div>
+            <h1 class="text-white text-xl font-bold">附近照片搜尋器</h1>
+            <p class="text-blue-100 text-sm mt-1">基於您當前的位置搜尋 Google 相簿</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+            
+            <!-- Step 1: Initial State -->
+            <div id="step-init" class="text-center space-y-4">
+                <p class="text-gray-600">
+                    點擊下方按鈕以獲取您的 GPS 座標，並搜尋該地點附近的相片回憶。
+                </p>
+                <button onclick="startProcess()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-300 flex items-center justify-center shadow-md active:transform active:scale-95">
+                    <i class="fa-solid fa-crosshairs mr-2"></i> 獲取位置並搜尋
+                </button>
+            </div>
+
+            <!-- Step 2: Loading State (Hidden by default) -->
+            <div id="step-loading" class="hidden text-center py-4">
+                <div class="flex flex-col items-center justify-center space-y-3">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    <p id="loading-text" class="text-gray-500 font-medium">正在定位中...</p>
+                </div>
+            </div>
+
+            <!-- Step 3: Success Result (Hidden by default) -->
+            <div id="step-result" class="hidden space-y-4">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 class="text-green-800 font-semibold text-sm uppercase tracking-wide mb-1">定位成功</h3>
+                    <div class="flex items-start space-x-2 text-gray-700">
+                        <i class="fa-solid fa-location-dot mt-1 text-red-500"></i>
+                        <span id="location-name" class="font-bold text-lg">台北市</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 pl-6">
+                        座標: <span id="coords-text">--</span>
+                    </div>
+                </div>
+
+                <a id="final-link" href="#" target="_blank" class="block w-full bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-xl transition duration-300 text-center shadow-sm flex items-center justify-center">
+                    <img src="https://www.gstatic.com/images/branding/product/2x/photos_96dp.png" alt="Google Photos" class="w-6 h-6 mr-2">
+                    打開 Google 相簿
+                </a>
+                
+                <button onclick="resetApp()" class="w-full text-gray-400 text-sm hover:text-gray-600 underline">
+                    重新定位
+                </button>
+            </div>
+
+            <!-- Error State -->
+            <div id="step-error" class="hidden text-center py-2">
+                <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm mb-4">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                    <span id="error-msg">發生錯誤</span>
+                </div>
+                <button onclick="resetApp()" class="text-gray-500 underline text-sm">重試</button>
+            </div>
+
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-gray-50 px-6 py-3 text-center border-t border-gray-100">
+            <p class="text-xs text-gray-400">
+                注意：此工具使用 OpenStreetMap 進行地名轉換。<br>精確度取決於您的裝置 GPS。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const stepInit = document.getElementById('step-init');
+        const stepLoading = document.getElementById('step-loading');
+        const stepResult = document.getElementById('step-result');
+        const stepError = document.getElementById('step-error');
+        
+        const loadingText = document.getElementById('loading-text');
+        const locationNameEl = document.getElementById('location-name');
+        const coordsTextEl = document.getElementById('coords-text');
+        const finalLink = document.getElementById('final-link');
+        const errorMsg = document.getElementById('error-msg');
+
+        function showStep(stepId) {
+            [stepInit, stepLoading, stepResult, stepError].forEach(el => el.classList.add('hidden'));
+            document.getElementById(stepId).classList.remove('hidden');
+        }
+
+        function startProcess() {
+            showStep('step-loading');
+            loadingText.innerText = "正在請求 GPS 權限...";
+
+            if (!navigator.geolocation) {
+                showError("您的瀏覽器不支援地理定位功能。");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                handlePositionSuccess,
+                handlePositionError,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function handlePositionSuccess(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            coordsTextEl.innerText = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+            loadingText.innerText = "正在解析地址資訊...";
+
+            // 使用 OpenStreetMap Nominatim API 進行反向地理編碼
+            const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("網路請求失敗");
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data); // Debug output
+                    let placeName = "";
+
+                    // 智慧選擇地名邏輯：優先選擇區/市/鎮
+                    if (data.address) {
+                        placeName = data.address.district || 
+                                    data.address.city || 
+                                    data.address.town || 
+                                    data.address.county || 
+                                    data.address.village ||
+                                    data.address.suburb;
+                    }
+
+                    // 如果真的抓不到，就用經緯度搜尋 (Google Photos 支援座標搜尋但效果不一定好，這裡作為備案)
+                    // 或者 fallback 到預設文字
+                    if (!placeName) {
+                        placeName = "Nearby"; 
+                    }
+
+                    displayResult(placeName);
+                })
+                .catch(err => {
+                    console.error(err);
+                    // 即使 API 失敗，也允許使用者打開相簿，只是關鍵字比較模糊
+                    displayResult("目前位置"); 
+                });
+        }
+
+        function displayResult(placeName) {
+            locationNameEl.innerText = placeName;
+            
+            // 構建 Google Photos Search URL
+            // 使用 encodeURIComponent 確保中文字符正確傳遞
+            const searchUrl = `https://photos.google.com/search/${encodeURIComponent(placeName)}`;
+            
+            finalLink.href = searchUrl;
+            showStep('step-result');
+        }
+
+        function handlePositionError(error) {
+            let msg = "無法獲取位置。";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    msg = "您拒絕了位置存取請求。請允許權限後重試。";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    msg = "位置資訊不可用。";
+                    break;
+                case error.TIMEOUT:
+                    msg = "請求位置逾時。";
+                    break;
+            }
+            showError(msg);
+        }
+
+        function showError(msg) {
+            errorMsg.innerText = msg;
+            showStep('step-error');
+        }
+
+        function resetApp() {
+            showStep('step-init');
+        }
+    </script>
+</body>
+</html>
