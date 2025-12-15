@@ -16,14 +16,28 @@
         .leaflet-pane { z-index: 1 !important; }
         .leaflet-control { z-index: 2 !important; }
         
-        /* Checkbox 自定義樣式 */
+        /* 通用 Checkbox 樣式 (人物 & 標籤) */
         .checkbox-wrapper input:checked + div {
             background-color: #eff6ff;
             border-color: #3b82f6;
             color: #1d4ed8;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
-        .checkbox-wrapper input:checked + div .check-icon {
-            opacity: 1;
+
+        /* 標籤專用微調 */
+        .tag-wrapper input:checked + div {
+            background-color: #f0f9ff;
+            border-color: #0ea5e9;
+            color: #0284c7;
+        }
+
+        /* 簡單的 Modal 動畫 */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow-x: hidden;
+            overflow-y: visible !important;
         }
     </style>
 </head>
@@ -32,10 +46,11 @@
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col pb-6">
         
         <!-- 標題區 -->
-        <div class="bg-blue-600 p-4 text-center z-10 relative shadow-md">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-4 text-center z-10 relative shadow-md">
             <h1 class="text-white text-lg font-bold flex items-center justify-center gap-2">
                 <i class="fa-solid fa-users-viewfinder"></i> 相簿複合搜尋器
             </h1>
+            <p class="text-blue-100 text-xs mt-1 opacity-80">手機/電腦雙模式</p>
         </div>
 
         <!-- 地圖預覽區 -->
@@ -58,9 +73,8 @@
                         <i class="fa-solid fa-location-crosshairs text-lg"></i>
                     </button>
                 </div>
-                <!-- 狀態顯示區 -->
                 <div id="status-bar" class="text-xs text-gray-500 min-h-[1.5rem] flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-blue-400"></i> 請輸入地點或點擊右側定位按鈕
+                    <i class="fa-solid fa-circle-info text-blue-400"></i> 請輸入地點或點擊定位
                 </div>
             </div>
 
@@ -68,93 +82,272 @@
 
             <!-- 步驟 2: 選擇人物 -->
             <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Step 2: 包含人物 (可多選)</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Step 2: 包含人物</label>
                 
                 <div class="grid grid-cols-2 gap-3">
                     <label class="checkbox-wrapper cursor-pointer relative">
-                        <input type="checkbox" value="蔣翊齊" class="peer sr-only">
+                        <input type="checkbox" name="person" value="蔣翊齊" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
                             <span class="font-medium text-gray-700">蔣翊齊</span>
-                            <i class="fa-solid fa-check check-icon text-blue-600 opacity-0 transition-opacity"></i>
+                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
 
                     <label class="checkbox-wrapper cursor-pointer relative">
-                        <input type="checkbox" value="蔣宥昇" class="peer sr-only">
+                        <input type="checkbox" name="person" value="蔣宥昇" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
                             <span class="font-medium text-gray-700">蔣宥昇</span>
-                            <i class="fa-solid fa-check check-icon text-blue-600 opacity-0 transition-opacity"></i>
+                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
 
                     <label class="checkbox-wrapper cursor-pointer relative">
-                        <input type="checkbox" value="陳榮芳" class="peer sr-only">
+                        <input type="checkbox" name="person" value="陳榮芳" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
                             <span class="font-medium text-gray-700">陳榮芳</span>
-                            <i class="fa-solid fa-check check-icon text-blue-600 opacity-0 transition-opacity"></i>
+                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
 
                     <label class="checkbox-wrapper cursor-pointer relative">
-                        <input type="checkbox" value="蔣宗恆" class="peer sr-only">
+                        <input type="checkbox" name="person" value="蔣宗恆" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
                             <span class="font-medium text-gray-700">蔣宗恆</span>
-                            <i class="fa-solid fa-check check-icon text-blue-600 opacity-0 transition-opacity"></i>
+                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
                 </div>
             </div>
 
-            <!-- 步驟 3: 送出搜尋 -->
-            <div class="pt-2">
-                <button onclick="executeSearch()" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-lg">
-                    <i class="fa-brands fa-google"></i>
-                    <span>搜尋相簿</span>
-                </button>
+            <div class="border-t border-gray-100"></div>
+
+            <!-- 步驟 3: 常用標籤 (新增) -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Step 3: 常用標籤 (選填)</label>
+                
+                <!-- 心情與活動 -->
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold mb-1 block pl-1">心情與活動</span>
+                    <div class="grid grid-cols-4 gap-2">
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="fun" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-face-laugh-beam text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">fun</span>
+                            </div>
+                        </label>
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="smile" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-face-smile text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">smile</span>
+                            </div>
+                        </label>
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="play" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-person-running text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">play</span>
+                            </div>
+                        </label>
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="holiday" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-plane-departure text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">holiday</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 景點與自然 -->
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold mb-1 block pl-1">景點與自然</span>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="river" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-water text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">river</span>
+                            </div>
+                        </label>
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="beach" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-umbrella-beach text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">beach</span>
+                            </div>
+                        </label>
+                        <label class="tag-wrapper cursor-pointer relative">
+                            <input type="checkbox" name="keyword" value="hotel" class="peer sr-only">
+                            <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                <i class="fa-solid fa-hotel text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">hotel</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 美食與其他 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold mb-1 block pl-1">美食</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="tag-wrapper cursor-pointer relative">
+                                <input type="checkbox" name="keyword" value="eat" class="peer sr-only">
+                                <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                    <i class="fa-solid fa-utensils text-lg mb-1"></i>
+                                    <span class="text-[10px] font-medium">eat</span>
+                                </div>
+                            </label>
+                            <label class="tag-wrapper cursor-pointer relative">
+                                <input type="checkbox" name="keyword" value="food" class="peer sr-only">
+                                <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                    <i class="fa-solid fa-burger text-lg mb-1"></i>
+                                    <span class="text-[10px] font-medium">food</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold mb-1 block pl-1">精選與 ID</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="tag-wrapper cursor-pointer relative">
+                                <input type="checkbox" name="keyword" value="masterpiece" class="peer sr-only">
+                                <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                    <i class="fa-solid fa-crown text-lg mb-1"></i>
+                                    <span class="text-[10px] font-medium text-center leading-tight">master<br>piece</span>
+                                </div>
+                            </label>
+                            <label class="tag-wrapper cursor-pointer relative">
+                                <input type="checkbox" name="keyword" value="作品" class="peer sr-only">
+                                <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                    <i class="fa-solid fa-palette text-lg mb-1"></i>
+                                    <span class="text-[10px] font-medium">作品</span>
+                                </div>
+                            </label>
+                            <label class="tag-wrapper cursor-pointer relative">
+                                <input type="checkbox" name="keyword" value="id-caad" class="peer sr-only">
+                                <div class="border border-gray-200 rounded-lg py-2 flex flex-col items-center justify-center transition hover:bg-gray-50 h-full">
+                                    <i class="fa-solid fa-id-card text-lg mb-1"></i>
+                                    <span class="text-[10px] font-medium text-center leading-tight">id<br>caad</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- 搜尋預覽與救援連結 -->
-            <div id="result-area" class="hidden bg-gray-50 p-3 rounded-lg border border-gray-200 text-center space-y-2">
+
+            <!-- 步驟 4: 行動按鈕區 -->
+            <div class="pt-2 space-y-3">
+                <!-- 手機版按鈕 -->
+                <button onclick="executeSearch()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>搜尋相簿 (手機推薦)</span>
+                </button>
+
+                <!-- 電腦版地圖按鈕 -->
+                <div>
+                    <a href="https://photos.google.com/places" target="_blank"
+                       class="w-full bg-white border-2 border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-laptop"></i>
+                        <span>打開地圖模式 (電腦專用)</span>
+                    </a>
+                    
+                    <!-- 幫助按鈕 -->
+                    <div class="text-center mt-2">
+                        <button onclick="toggleModal('help-modal')" class="text-xs text-gray-400 hover:text-blue-500 underline flex items-center justify-center gap-1 mx-auto">
+                            <i class="fa-solid fa-circle-question"></i> 找不到「探索」或「地點」？
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 結果顯示與救援連結 -->
+            <div id="result-area" class="hidden bg-gray-50 p-3 rounded-lg border border-gray-200 text-center space-y-2 mt-2">
                 <p class="text-xs text-gray-500">將搜尋：<span id="search-query-preview" class="font-bold text-gray-800">--</span></p>
-                <a id="final-link" href="#" target="_blank" class="text-sm text-blue-600 underline font-medium block p-2 bg-white rounded border border-blue-100">
-                    <i class="fa-solid fa-up-right-from-square"></i> 點此開啟相簿
+                <a id="final-link" href="#" target="_blank" class="text-sm text-blue-600 underline font-medium block">
+                    <i class="fa-solid fa-up-right-from-square"></i> 點此開啟搜尋結果
                 </a>
             </div>
 
         </div>
     </div>
 
+    <!-- 幫助視窗 Modal -->
+    <div id="help-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('help-modal')"></div>
+        
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            
+            <div class="modal-content py-4 text-left px-6">
+                <!-- Title -->
+                <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                    <p class="text-lg font-bold text-gray-700">電腦版地圖在哪裡？</p>
+                    <div class="modal-close cursor-pointer z-50" onclick="toggleModal('help-modal')">
+                        <i class="fa-solid fa-xmark text-gray-500"></i>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="py-4 space-y-4 text-gray-600 text-sm">
+                    <p>Google 相簿電腦版有時會因為瀏覽器設定而隱藏地圖：</p>
+                    
+                    <!-- 新增：地圖消失的解決方案 -->
+                    <div class="bg-red-50 p-3 rounded border border-red-100">
+                        <p class="font-bold text-red-800 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> 我到了「地點」但沒看到地圖？</p>
+                        <p class="mb-2">這通常是因為瀏覽器的<strong>「硬體加速」</strong>被關閉了。</p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold text-xs text-gray-900"><i class="fa-brands fa-chrome"></i> Google Chrome:</p>
+                                <ul class="list-disc pl-5 text-xs text-gray-700">
+                                    <li><strong>設定</strong> > <strong>系統</strong></li>
+                                    <li>開啟 <strong>「在可用時使用圖形加速」</strong></li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-xs text-gray-900"><i class="fa-brands fa-edge"></i> Microsoft Edge:</p>
+                                <ul class="list-disc pl-5 text-xs text-gray-700">
+                                    <li><strong>設定</strong> > <strong>系統與效能</strong></li>
+                                    <li>開啟 <strong>「在可用時使用圖形加速」</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="text-xs text-red-600 mt-2 font-bold">* 設定後請務必重新啟動瀏覽器！</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <p class="font-bold text-gray-800 mb-1">一般進入方式</p>
+                        <p>左側選單 <span class="text-blue-600 font-bold">「收藏」</span> > <span class="text-blue-600 font-bold">「地點」</span></p>
+                    </div>
+                    
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end pt-2">
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick="toggleModal('help-modal')">知道了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 初始化地圖 (預設視野: 台灣)
         var map = L.map('map').setView([23.973875, 120.982024], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OSM'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
         var currentMarker = null;
 
-        // 狀態更新
         function setStatus(msg, type = 'normal') {
             const el = document.getElementById('status-bar');
-            let colorClass = 'text-gray-500';
-            let icon = '<i class="fa-solid fa-info-circle"></i>';
-
-            if (type === 'error') {
-                colorClass = 'text-red-500 font-bold';
-                icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            } else if (type === 'success') {
-                colorClass = 'text-green-600 font-bold';
-                icon = '<i class="fa-solid fa-check-circle"></i>';
-            } else if (type === 'loading') {
-                colorClass = 'text-blue-600';
-                icon = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            }
-
+            let color = type === 'error' ? 'text-red-500 font-bold' : (type === 'loading' ? 'text-blue-600' : 'text-gray-500');
+            let icon = type === 'loading' ? '<i class="fa-solid fa-spinner fa-spin"></i>' : '<i class="fa-solid fa-info-circle"></i>';
             el.innerHTML = `${icon} ${msg}`;
-            el.className = `text-xs min-h-[1.5rem] flex items-center gap-1 ${colorClass}`;
+            el.className = `text-xs min-h-[1.5rem] flex items-center gap-1 ${color}`;
         }
 
-        // 更新地圖位置
         function updateMap(lat, lon, zoom = 13) {
             if (currentMarker) map.removeLayer(currentMarker);
             map.setView([lat, lon], zoom);
@@ -162,136 +355,101 @@
             map.invalidateSize();
         }
 
-        // --- 功能 A: GPS 定位 (增強版) ---
         function searchGPS() {
-            setStatus('GPS 定位中 (請稍候約 10 秒)...', 'loading');
+            setStatus('GPS 定位中 (約需 10 秒)...', 'loading');
             document.getElementById('gps-btn').disabled = true;
             
             if (!navigator.geolocation) {
-                setStatus('您的瀏覽器不支援 GPS', 'error');
+                setStatus('瀏覽器不支援 GPS', 'error');
                 document.getElementById('gps-btn').disabled = false;
                 return;
             }
 
             navigator.geolocation.getCurrentPosition(
-                // 成功回呼
                 (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    
                     updateMap(lat, lon, 15);
-                    setStatus('定位成功！正在轉換地址...', 'loading');
+                    setStatus('轉換地址中...', 'loading');
 
-                    // 反向地理編碼
                     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14`)
                         .then(res => res.json())
                         .then(data => {
-                            let place = "";
-                            if (data.address) {
-                                place = data.address.city || 
-                                        data.address.town || 
-                                        data.address.district || 
-                                        data.address.county || 
-                                        data.address.state || "";
-                            }
-                            
+                            let place = data.address ? (data.address.city || data.address.town || data.address.district || "") : "";
                             if (place) {
                                 document.getElementById('location-input').value = place;
                                 setStatus(`📍 已定位：${place}`, 'success');
                             } else {
-                                // 如果找不到名字，填入座標備用
                                 document.getElementById('location-input').value = "我的位置";
-                                setStatus('無法辨識地名，請手動確認', 'error');
+                                setStatus('無法辨識地名', 'error');
                             }
                             document.getElementById('gps-btn').disabled = false;
                         })
                         .catch(err => {
-                            setStatus('網路不穩，無法轉換地址', 'error');
+                            setStatus('網路錯誤', 'error');
                             document.getElementById('gps-btn').disabled = false;
                         });
                 },
-                // 失敗回呼
                 (err) => {
-                    console.error(err);
-                    let errMsg = "定位失敗";
-                    
-                    // 根據錯誤代碼給出具體建議
-                    switch(err.code) {
-                        case err.PERMISSION_DENIED:
-                            errMsg = "權限被拒絕：請檢查瀏覽器設定";
-                            // 教學提示: 點擊網址列鎖頭 -> 權限 -> 重設
-                            break;
-                        case err.POSITION_UNAVAILABLE:
-                            errMsg = "無法取得位置：請確認 GPS 已開啟";
-                            break;
-                        case err.TIMEOUT:
-                            errMsg = "定位超時：請在空曠處重試";
-                            break;
-                    }
-                    setStatus(errMsg, 'error');
+                    setStatus('定位失敗，請檢查權限', 'error');
                     document.getElementById('gps-btn').disabled = false;
                 },
-                // 參數設定 (關鍵修正)
-                { 
-                    enableHighAccuracy: true, // 嘗試高精確度
-                    timeout: 20000,           // 延長到 20 秒 (解決超時問題)
-                    maximumAge: 0 
-                }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
         }
 
-        // --- 功能 B: 執行搜尋 ---
         function executeSearch() {
-            // 1. 取得地點
             const locationInput = document.getElementById('location-input');
             let locationVal = locationInput.value.trim();
 
-            if (!locationVal) {
-                // 如果沒填，預設為 "神戶市" (根據您的需求)
-                // locationVal = "神戶市"; 
-                // 或者強制使用者輸入：
-                setStatus('請輸入或定位地點！', 'error');
+            // 如果沒有地點，但有選標籤，也可以搜尋（Optional: 視需求而定，目前保持需要地點或有選人/標籤）
+            // 這裡邏輯修改為：只要有任一條件即可搜尋，但如果只輸入標籤，Google Photos 可能會搜尋全球照片
+            
+            // 抓取人物
+            const personCheckboxes = document.querySelectorAll('input[name="person"]:checked');
+            let selectedItems = [];
+            personCheckboxes.forEach((cb) => selectedItems.push(cb.value));
+
+            // 抓取標籤 (新增)
+            const keywordCheckboxes = document.querySelectorAll('input[name="keyword"]:checked');
+            keywordCheckboxes.forEach((cb) => selectedItems.push(cb.value));
+
+            if (!locationVal && selectedItems.length === 0) {
+                setStatus('請輸入地點或選擇條件！', 'error');
                 locationInput.focus();
                 return;
             }
 
-            // 更新地圖預覽 (如果是手動輸入)
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationVal)}`)
+            // 更新地圖 (如果有輸入地點)
+            if (locationVal) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationVal)}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data && data.length > 0) {
-                        updateMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
-                    }
+                    if (data && data.length > 0) updateMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
                 });
-
-            // 2. 取得勾選的人物
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-            let selectedPeople = [];
-            checkboxes.forEach((cb) => {
-                selectedPeople.push(cb.value);
-            });
-
-            // 3. 組合搜尋字串
+            }
+            
+            // 組合查詢字串
             let finalQuery = locationVal;
-            if (selectedPeople.length > 0) {
-                finalQuery += " " + selectedPeople.join(" ");
+            if (selectedItems.length > 0) {
+                // 如果有地點，加空格後接關鍵字；如果沒地點，直接放關鍵字
+                finalQuery = finalQuery ? (finalQuery + " " + selectedItems.join(" ")) : selectedItems.join(" ");
             }
 
-            // 4. 產生連結
-            const googlePhotosUrl = `https://photos.google.com/search/${encodeURIComponent(finalQuery)}`;
+            const url = `https://photos.google.com/search/${encodeURIComponent(finalQuery)}`;
             
-            // 顯示結果區
             document.getElementById('search-query-preview').innerText = finalQuery;
-            const finalLink = document.getElementById('final-link');
-            finalLink.href = googlePhotosUrl;
+            document.getElementById('final-link').href = url;
             document.getElementById('result-area').classList.remove('hidden');
 
             setStatus('正在開啟相簿...', 'success');
+            setTimeout(() => { window.open(url, '_blank'); }, 500);
+        }
 
-            // 嘗試自動開啟
-            setTimeout(() => {
-                window.open(googlePhotosUrl, '_blank');
-            }, 500);
+        function toggleModal(modalID){
+            document.getElementById(modalID).classList.toggle("opacity-0");
+            document.getElementById(modalID).classList.toggle("pointer-events-none");
+            document.body.classList.toggle("modal-active");
         }
     </script>
 </body>
