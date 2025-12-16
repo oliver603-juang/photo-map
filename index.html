@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>相簿複合搜尋器</title>
+    <title>相簿複合搜尋器 | 綠色莫蘭迪風格</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -12,23 +12,46 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <style>
+        /* --------------------- GREEN MORANDI THEME --------------------- */
+        :root {
+            --bg-main: #F9F7F3; /* 淺米白/灰白 */
+            --color-text: #333333;
+            --accent-green: #A8B5A3; /* 柔和灰綠 (Primary) */
+            --accent-green-dark: #7D8B7E; /* 沉穩深綠 */
+            --accent-pink: #E4C7C2; /* 淺柔粉 (Secondary) */
+            --accent-pink-dark: #DDA0A0; /* 淺暖橘/乾燥玫瑰 (Success/Highlight) */
+            --color-gray-dark: #4B5563; /* Gray-600 */
+        }
+
+        body {
+            background-color: var(--bg-main);
+        }
+        
         #map { height: 200px; width: 100%; z-index: 1; }
         .leaflet-pane { z-index: 1 !important; }
         .leaflet-control { z-index: 2 !important; }
         
         /* 通用 Checkbox 樣式 (人物 & 標籤) */
         .checkbox-wrapper input:checked + div {
-            background-color: #eff6ff;
-            border-color: #3b82f6;
-            color: #1d4ed8;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            /* Checkbox: 使用淺柔粉作為底色，柔和灰綠作為邊框 */
+            background-color: var(--accent-pink);
+            border-color: var(--accent-green);
+            color: var(--color-text);
+            box-shadow: 0 1px 4px 0 rgba(168, 181, 163, 0.2);
+        }
+        .checkbox-wrapper input:checked + div i {
+            color: var(--accent-green-dark); /* 深綠色打勾 */
         }
 
         /* 標籤專用微調 */
         .tag-wrapper input:checked + div {
-            background-color: #f0f9ff;
-            border-color: #0ea5e9;
-            color: #0284c7;
+            /* Tag: 使用柔和灰綠作為底色，淺柔粉作為邊框 */
+            background-color: var(--accent-green);
+            border-color: var(--accent-pink);
+            color: var(--color-text);
+        }
+        .tag-wrapper input:checked + div i {
+            color: var(--accent-pink-dark); /* 淺暖橘圖示 */
         }
 
         /* 簡單的 Modal 動畫 */
@@ -39,18 +62,61 @@
             overflow-x: hidden;
             overflow-y: visible !important;
         }
+
+        /* 狀態欄顏色調整 */
+        .status-error { color: #DC2626 !important; }
+        .status-loading { color: var(--accent-green-dark) !important; }
+        .status-success { color: var(--accent-pink-dark) !important; }
+
+        /* 輸入框 focus 調整 */
+        input:focus {
+            outline: none !important;
+            border-color: var(--accent-green) !important;
+            box-shadow: 0 0 0 3px rgba(168, 181, 163, 0.3) !important;
+        }
+
+        /* 按鈕顏色調整 */
+        .btn-primary {
+            background-color: var(--accent-green-dark);
+            color: var(--bg-main);
+            box-shadow: 0 4px 0 0 var(--accent-pink-dark);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-green);
+            box-shadow: 0 4px 0 0 var(--accent-pink);
+        }
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+        .btn-secondary {
+            border-color: var(--accent-pink);
+            color: var(--color-gray-dark);
+        }
+        .btn-secondary:hover {
+            background-color: var(--accent-pink);
+            border-color: var(--accent-pink-dark);
+            color: var(--color-text);
+        }
+        .btn-link {
+            color: var(--accent-green-dark);
+        }
+        .btn-link:hover {
+            color: var(--accent-pink-dark);
+        }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-[var(--bg-main)] flex items-center justify-center min-h-screen p-4 text-[var(--color-text)]">
 
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col pb-6">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col pb-6 border border-gray-200">
         
-        <!-- 標題區 -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-4 text-center z-10 relative shadow-md">
-            <h1 class="text-white text-lg font-bold flex items-center justify-center gap-2">
+        <!-- 標題區 (使用 Accent-Green 漸變) -->
+        <div class="bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-green-dark)] p-4 text-center z-10 relative shadow-md">
+            <h1 class="text-[var(--bg-main)] text-lg font-bold flex items-center justify-center gap-2">
                 <i class="fa-solid fa-users-viewfinder"></i> 相簿複合搜尋器
             </h1>
-            <p class="text-blue-100 text-xs mt-1 opacity-80">手機/電腦雙模式</p>
+            <p class="text-white text-xs mt-1 opacity-80">Morandi Green Style</p>
         </div>
 
         <!-- 地圖預覽區 -->
@@ -64,17 +130,17 @@
                 
                 <div class="flex gap-2">
                     <div class="relative flex-1">
-                        <i class="fa-solid fa-map-pin absolute left-3 top-3 text-gray-400"></i>
+                        <i class="fa-solid fa-map-pin absolute left-3 top-3 text-[var(--accent-green)]"></i>
                         <input id="location-input" type="text" placeholder="例如: 神戶市" 
-                            class="w-full appearance-none border border-gray-300 rounded-lg py-2 pl-10 pr-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition">
+                            class="w-full appearance-none border border-gray-300 rounded-lg py-2 pl-10 pr-4 text-[var(--color-text)] focus:ring-0 shadow-sm transition">
                     </div>
                     <button onclick="searchGPS()" id="gps-btn"
-                        class="bg-white border border-gray-300 text-gray-700 px-3 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition shadow-sm" title="定位目前位置">
+                        class="bg-white border border-gray-300 text-[var(--color-gray-dark)] px-3 rounded-lg hover:bg-gray-50 hover:text-[var(--accent-green)] transition shadow-sm" title="定位目前位置">
                         <i class="fa-solid fa-location-crosshairs text-lg"></i>
                     </button>
                 </div>
                 <div id="status-bar" class="text-xs text-gray-500 min-h-[1.5rem] flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-blue-400"></i> 請輸入地點或點擊定位
+                    <i class="fa-solid fa-circle-info text-[var(--accent-green)]"></i> 請輸入地點或點擊定位
                 </div>
             </div>
 
@@ -88,32 +154,32 @@
                     <label class="checkbox-wrapper cursor-pointer relative">
                         <input type="checkbox" name="person" value="蔣翊齊" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
-                            <span class="font-medium text-gray-700">蔣翊齊</span>
-                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
+                            <span class="font-medium text-[var(--color-gray-dark)]">蔣翊齊</span>
+                            <i class="fa-solid fa-check text-[var(--accent-green)] opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
 
                     <label class="checkbox-wrapper cursor-pointer relative">
                         <input type="checkbox" name="person" value="蔣宥昇" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
-                            <span class="font-medium text-gray-700">蔣宥昇</span>
-                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
+                            <span class="font-medium text-[var(--color-gray-dark)]">蔣宥昇</span>
+                            <i class="fa-solid fa-check text-[var(--accent-green)] opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
 
                     <label class="checkbox-wrapper cursor-pointer relative">
                         <input type="checkbox" name="person" value="陳榮芳" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
-                            <span class="font-medium text-gray-700">陳榮芳</span>
-                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
+                            <span class="font-medium text-[var(--color-gray-dark)]">陳榮芳</span>
+                            <i class="fa-solid fa-check text-[var(--accent-green)] opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
 
                     <label class="checkbox-wrapper cursor-pointer relative">
                         <input type="checkbox" name="person" value="蔣宗恆" class="peer sr-only">
                         <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between transition hover:bg-gray-50">
-                            <span class="font-medium text-gray-700">蔣宗恆</span>
-                            <i class="fa-solid fa-check text-blue-600 opacity-0 peer-checked:opacity-100"></i>
+                            <span class="font-medium text-[var(--color-gray-dark)]">蔣宗恆</span>
+                            <i class="fa-solid fa-check text-[var(--accent-green)] opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </label>
                 </div>
@@ -243,7 +309,7 @@
             <div class="pt-2 space-y-3">
                 <!-- 手機版按鈕 -->
                 <button onclick="executeSearch()" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                    class="w-full btn-primary font-bold py-3.5 rounded-xl transition transform active:scale-95 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-mobile-screen-button"></i>
                     <span>搜尋相簿 (手機推薦)</span>
                 </button>
@@ -251,14 +317,14 @@
                 <!-- 電腦版地圖按鈕 -->
                 <div>
                     <a href="https://photos.google.com/places" target="_blank"
-                       class="w-full bg-white border-2 border-gray-200 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition flex items-center justify-center gap-2">
+                       class="w-full bg-white border-2 btn-secondary font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-laptop"></i>
                         <span>打開地圖模式 (電腦專用)</span>
                     </a>
                     
                     <!-- 幫助按鈕 -->
                     <div class="text-center mt-2">
-                        <button onclick="toggleModal('help-modal')" class="text-xs text-gray-400 hover:text-blue-500 underline flex items-center justify-center gap-1 mx-auto">
+                        <button onclick="toggleModal('help-modal')" class="text-xs btn-link underline flex items-center justify-center gap-1 mx-auto">
                             <i class="fa-solid fa-circle-question"></i> 找不到「探索」或「地點」？
                         </button>
                     </div>
@@ -267,8 +333,8 @@
 
             <!-- 結果顯示與救援連結 -->
             <div id="result-area" class="hidden bg-gray-50 p-3 rounded-lg border border-gray-200 text-center space-y-2 mt-2">
-                <p class="text-xs text-gray-500">將搜尋：<span id="search-query-preview" class="font-bold text-gray-800">--</span></p>
-                <a id="final-link" href="#" target="_blank" class="text-sm text-blue-600 underline font-medium block">
+                <p class="text-xs text-gray-500">將搜尋：<span id="search-query-preview" class="font-bold text-[var(--color-gray-dark)]">--</span></p>
+                <a id="final-link" href="#" target="_blank" class="text-sm btn-link underline font-medium block">
                     <i class="fa-solid fa-up-right-from-square"></i> 點此開啟搜尋結果
                 </a>
             </div>
@@ -280,14 +346,14 @@
     <div id="help-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="toggleModal('help-modal')"></div>
         
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto border border-gray-200">
             
             <div class="modal-content py-4 text-left px-6">
                 <!-- Title -->
                 <div class="flex justify-between items-center pb-3 border-b border-gray-200">
-                    <p class="text-lg font-bold text-gray-700">電腦版地圖在哪裡？</p>
+                    <p class="text-lg font-bold text-[var(--color-text)]">電腦版地圖在哪裡？</p>
                     <div class="modal-close cursor-pointer z-50" onclick="toggleModal('help-modal')">
-                        <i class="fa-solid fa-xmark text-gray-500"></i>
+                        <i class="fa-solid fa-xmark text-gray-500 hover:text-[var(--accent-pink-dark)]"></i>
                     </div>
                 </div>
 
@@ -296,13 +362,13 @@
                     <p>Google 相簿電腦版有時會因為瀏覽器設定而隱藏地圖：</p>
                     
                     <!-- 新增：地圖消失的解決方案 -->
-                    <div class="bg-red-50 p-3 rounded border border-red-100">
-                        <p class="font-bold text-red-800 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> 我到了「地點」但沒看到地圖？</p>
+                    <div class="bg-red-50 p-3 rounded-lg border border-red-300">
+                        <p class="font-bold text-red-800 mb-1"><i class="fa-solid fa-triangle-exclamation text-red-500"></i> 我到了「地點」但沒看到地圖？</p>
                         <p class="mb-2">這通常是因為瀏覽器的<strong>「硬體加速」</strong>被關閉了。</p>
                         
                         <div class="space-y-3">
                             <div>
-                                <p class="font-bold text-xs text-gray-900"><i class="fa-brands fa-chrome"></i> Google Chrome:</p>
+                                <p class="font-bold text-xs text-[var(--color-text)]"><i class="fa-brands fa-chrome text-[var(--accent-green-dark)]"></i> Google Chrome:</p>
                                 <ul class="list-disc pl-5 text-xs text-gray-700">
                                     <li><strong>設定</strong> > <strong>系統</strong></li>
                                     <li>開啟 <strong>「在可用時使用圖形加速」</strong></li>
@@ -310,7 +376,7 @@
                             </div>
                             
                             <div>
-                                <p class="font-bold text-xs text-gray-900"><i class="fa-brands fa-edge"></i> Microsoft Edge:</p>
+                                <p class="font-bold text-xs text-[var(--color-text)]"><i class="fa-brands fa-edge text-[var(--accent-green-dark)]"></i> Microsoft Edge:</p>
                                 <ul class="list-disc pl-5 text-xs text-gray-700">
                                     <li><strong>設定</strong> > <strong>系統與效能</strong></li>
                                     <li>開啟 <strong>「在可用時使用圖形加速」</strong></li>
@@ -320,16 +386,16 @@
                         <p class="text-xs text-red-600 mt-2 font-bold">* 設定後請務必重新啟動瀏覽器！</p>
                     </div>
 
-                    <div class="bg-gray-50 p-3 rounded border">
-                        <p class="font-bold text-gray-800 mb-1">一般進入方式</p>
-                        <p>左側選單 <span class="text-blue-600 font-bold">「收藏」</span> > <span class="text-blue-600 font-bold">「地點」</span></p>
+                    <div class="bg-gray-100 p-3 rounded-lg border border-gray-300">
+                        <p class="font-bold text-[var(--color-text)] mb-1">一般進入方式</p>
+                        <p>左側選單 <span class="text-[var(--accent-green-dark)] font-bold">「收藏」</span> > <span class="text-[var(--accent-green-dark)] font-bold">「地點」</span></p>
                     </div>
                     
                 </div>
 
                 <!-- Footer -->
                 <div class="flex justify-end pt-2">
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick="toggleModal('help-modal')">知道了</button>
+                    <button class="px-4 py-2 btn-primary rounded-lg" onclick="toggleModal('help-modal')">知道了</button>
                 </div>
             </div>
         </div>
@@ -340,12 +406,40 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map);
         var currentMarker = null;
 
+        // 初始化時，檢查並設置 GPS/地名狀態
+        document.addEventListener('DOMContentLoaded', () => {
+             setStatus('請輸入地點或點擊定位');
+             map.invalidateSize();
+        });
+
+
         function setStatus(msg, type = 'normal') {
             const el = document.getElementById('status-bar');
-            let color = type === 'error' ? 'text-red-500 font-bold' : (type === 'loading' ? 'text-blue-600' : 'text-gray-500');
-            let icon = type === 'loading' ? '<i class="fa-solid fa-spinner fa-spin"></i>' : '<i class="fa-solid fa-info-circle"></i>';
-            el.innerHTML = `${icon} ${msg}`;
-            el.className = `text-xs min-h-[1.5rem] flex items-center gap-1 ${color}`;
+            let iconClass = '';
+            let colorClass = '';
+            
+            switch(type) {
+                case 'error':
+                    iconClass = 'fa-solid fa-triangle-exclamation';
+                    colorClass = 'status-error';
+                    break;
+                case 'loading':
+                    iconClass = 'fa-solid fa-spinner fa-spin';
+                    colorClass = 'status-loading';
+                    break;
+                case 'success':
+                    iconClass = 'fa-solid fa-circle-check';
+                    colorClass = 'status-success';
+                    break;
+                case 'normal':
+                default:
+                    iconClass = 'fa-solid fa-circle-info';
+                    colorClass = 'text-gray-500';
+                    break;
+            }
+
+            el.innerHTML = `<i class="${iconClass}"></i> ${msg}`;
+            el.className = `text-xs min-h-[1.5rem] flex items-center gap-1 ${colorClass}`;
         }
 
         function updateMap(lat, lon, zoom = 13) {
@@ -381,17 +475,23 @@
                                 setStatus(`📍 已定位：${place}`, 'success');
                             } else {
                                 document.getElementById('location-input').value = "我的位置";
-                                setStatus('無法辨識地名', 'error');
+                                setStatus('定位成功，但無法辨識地名。', 'success');
                             }
                             document.getElementById('gps-btn').disabled = false;
                         })
                         .catch(err => {
-                            setStatus('網路錯誤', 'error');
+                            setStatus('網路錯誤或服務暫時無回應', 'error');
                             document.getElementById('gps-btn').disabled = false;
                         });
                 },
                 (err) => {
-                    setStatus('定位失敗，請檢查權限', 'error');
+                    let errMsg = '定位失敗，請檢查權限';
+                    if (err.code === err.PERMISSION_DENIED) {
+                        errMsg = '您已拒絕定位權限，請手動輸入地點。';
+                    } else if (err.code === err.TIMEOUT) {
+                        errMsg = '定位超時，請重試或手動輸入。';
+                    }
+                    setStatus(errMsg, 'error');
                     document.getElementById('gps-btn').disabled = false;
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
@@ -402,15 +502,12 @@
             const locationInput = document.getElementById('location-input');
             let locationVal = locationInput.value.trim();
 
-            // 如果沒有地點，但有選標籤，也可以搜尋（Optional: 視需求而定，目前保持需要地點或有選人/標籤）
-            // 這裡邏輯修改為：只要有任一條件即可搜尋，但如果只輸入標籤，Google Photos 可能會搜尋全球照片
-            
             // 抓取人物
             const personCheckboxes = document.querySelectorAll('input[name="person"]:checked');
             let selectedItems = [];
             personCheckboxes.forEach((cb) => selectedItems.push(cb.value));
 
-            // 抓取標籤 (新增)
+            // 抓取標籤
             const keywordCheckboxes = document.querySelectorAll('input[name="keyword"]:checked');
             keywordCheckboxes.forEach((cb) => selectedItems.push(cb.value));
 
@@ -426,6 +523,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.length > 0) updateMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
+                    map.invalidateSize(); // 確保地圖在彈出時能正確渲染
                 });
             }
             
@@ -440,7 +538,10 @@
             
             document.getElementById('search-query-preview').innerText = finalQuery;
             document.getElementById('final-link').href = url;
-            document.getElementById('result-area').classList.remove('hidden');
+            
+            const resultArea = document.getElementById('result-area');
+            resultArea.classList.remove('hidden');
+            resultArea.classList.add('bg-[var(--accent-pink)]/20', 'border-[var(--accent-pink)]'); // 新增莫蘭迪樣式
 
             setStatus('正在開啟相簿...', 'success');
             setTimeout(() => { window.open(url, '_blank'); }, 500);
